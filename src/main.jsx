@@ -4,13 +4,13 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
-import { UserProvider } from "./context/UserContext.jsx";  // ← Новый импорт
+import { UserProvider } from "./context/UserContext.jsx";  // ← Новый провайдер
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
-      <UserProvider> 
+      <UserProvider>
         <BrowserRouter>
           <App />
         </BrowserRouter>

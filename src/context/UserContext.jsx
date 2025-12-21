@@ -7,23 +7,38 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Загружаем сохранённые данные при запуске
     const savedUser = localStorage.getItem("user");
-    const savedToken = localStorage.getItem("token");
-    if (savedUser && savedToken) {
+    if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
   }, []);
 
-  const login = (userData, token) => {
+  const login = (userData) => {
     localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", token);
     setUser(userData);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+
+    if (refreshToken) {
+      try {
+        await fetch("http://localhost:8000/api/v1/user/logout/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+        // Не проверяем ответ строго — главное, что запрос ушёл
+      } catch (err) {
+        console.error("Ошибка при логауте на бэкенде:", err);
+        // Даже если бэкенд недоступен — всё равно очищаем локально
+      }
+    }
+
+    // Очищаем всё локально
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     setUser(null);
   };
 

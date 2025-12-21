@@ -1,10 +1,12 @@
 // src/components/AuthModalButton.jsx
 import { useState } from "react";
-import { useUser } from "../context/UserContext"; // Если есть UserContext, иначе удали эту строку и login()
+import { useNavigate } from "react-router-dom";
+import { useUser } from "../context/UserContext";
 
 export function AuthModalButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const { login } = useUser();  // ← Получаем функцию login
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
@@ -17,7 +19,7 @@ export function AuthModalButton() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const { login } = useUser(); // Если нет UserContext — удали эту строку и вызовы login()
+  const navigate = useNavigate();
 
   const closeModal = () => {
     setIsOpen(false);
@@ -52,13 +54,15 @@ export function AuthModalButton() {
 
       if (!response.ok) throw new Error(data.detail || "Неверный email или пароль");
 
-      if (login) {
-        login({ email: data.email }, data.access);
-        localStorage.setItem("refresh", data.refresh);
-      }
+      login({ full_name: data.full_name || "Пользователь", email: data.email });
+
+      // Сохраняем токены в localStorage
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
 
       alert("Вход успешен!");
       closeModal();
+      navigate("/main");
     } catch (err) {
       alert(err.message || "Ошибка входа");
     } finally {
@@ -69,7 +73,7 @@ export function AuthModalButton() {
   // Регистрация
   const handleRegister = async () => {
     const newErrors = {};
-    if (!registerForm.full_name.trim()) newErrors.full_name = "Имя обязательно";
+    if (!registerForm.full_name.trim()) newErrors.full_name = "Полное имя обязательно";
     if (!registerForm.email.trim()) newErrors.email = "Email обязателен";
     else if (!/^\S+@\S+\.\S+$/.test(registerForm.email)) newErrors.email = "Некорректный email";
     if (!registerForm.password) newErrors.password = "Пароль обязателен";
@@ -97,13 +101,15 @@ export function AuthModalButton() {
 
       if (!response.ok) throw new Error(data.detail || "Ошибка регистрации");
 
-      if (login) {
-        login({ email: data.email, full_name: data.full_name }, data.access);
-        localStorage.setItem("refresh", data.refresh);
-      }
+      login({ full_name: registerForm.full_name, email: data.email });
+
+      // Сохраняем токены
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
 
       alert("Регистрация успешна!");
       closeModal();
+      navigate("/main");
     } catch (err) {
       alert(err.message || "Ошибка регистрации");
     } finally {
@@ -113,6 +119,7 @@ export function AuthModalButton() {
 
   return (
     <>
+      {/* Кнопка открытия модалки */}
       <button
         onClick={() => setIsOpen(true)}
         className="px-12 py-6 text-2xl font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
@@ -120,6 +127,7 @@ export function AuthModalButton() {
         Войти / Зарегистрироваться
       </button>
 
+      {/* Модальное окно */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
@@ -139,6 +147,7 @@ export function AuthModalButton() {
               </button>
             </div>
 
+            {/* Вкладки */}
             <div className="flex justify-center mb-8 border-b border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setActiveTab("login")}
@@ -162,6 +171,7 @@ export function AuthModalButton() {
               </button>
             </div>
 
+            {/* Формы */}
             <div className="space-y-6">
               {activeTab === "login" ? (
                 <>

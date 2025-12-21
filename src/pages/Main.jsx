@@ -2,9 +2,11 @@
 import { Link } from "react-router-dom";
 import { AuthModalButton } from "../components/AuthModalButton";
 import { useTheme } from "../context/ThemeContext";
+import { useUser } from "../context/UserContext";  // ← Добавлен импорт
 
 export function Main() {
   const { isDark, toggleTheme } = useTheme();
+  const { user, logout } = useUser();  // ← Получаем пользователя и функцию выхода
 
   return (
     <div className="min-h-screen bg-orange-100 dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -41,8 +43,9 @@ export function Main() {
             </div>
           </div>
 
-          {/* Правый блок — кнопка темы + вход */}
+          {/* Правый блок — кнопка темы + профиль/вход */}
           <div className="flex items-center space-x-4 md:space-x-6 flex-shrink-0">
+            {/* Кнопка смены темы */}
             <button
               onClick={toggleTheme}
               className="p-3 rounded-full bg-gray-700 dark:bg-orange-200/50 hover:bg-orange-200 dark:hover:bg-gray-600 transition"
@@ -50,7 +53,23 @@ export function Main() {
               {isDark ? "☀️" : "🌙"}
             </button>
 
-            <AuthModalButton />
+            {/* Если пользователь залогинен — приветствие + выход */}
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-lg font-medium text-gray-900 dark:text-white">
+                  Привет, {user.full_name || user.name || "Пользователь"}!
+                </span>
+                <button
+                  onClick={logout}  // ← Работает с async, React сам подождёт
+                  className="px-4 py-2 text-sm font-medium text-red-600                 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
+                >
+                  Выйти
+                </button>
+              </div>
+            ) : (
+              /* Если не залогинен — кнопка входа */
+              <AuthModalButton />
+            )}
           </div>
         </div>
       </header>
