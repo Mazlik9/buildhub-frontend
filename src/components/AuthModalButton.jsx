@@ -1,25 +1,33 @@
 // src/components/AuthModalButton.jsx
 import { useState } from "react";
+import { useUser } from "../context/UserContext"; // Если есть UserContext, иначе удали эту строку и login()
 
 export function AuthModalButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("login"); // "login" или "register"
+  const [activeTab, setActiveTab] = useState("login");
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" });
+  const [registerForm, setRegisterForm] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+    password2: "",
+  });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const { login } = useUser(); // Если нет UserContext — удали эту строку и вызовы login()
 
   const closeModal = () => {
     setIsOpen(false);
     setErrors({});
     setLoginForm({ email: "", password: "" });
-    setRegisterForm({ name: "", email: "", password: "" });
+    setRegisterForm({ full_name: "", email: "", password: "", password2: "" });
     setLoading(false);
   };
 
-  // Валидация и отправка входа
+  // Вход
   const handleLogin = async () => {
     const newErrors = {};
     if (!loginForm.email.trim()) newErrors.email = "Email обязателен";
@@ -31,13 +39,24 @@ export function AuthModalButton() {
 
     setLoading(true);
     try {
-      // Замени на реальный URL от твоего друга-бэкендера
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch("http://localhost:8000/api/v1/user/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginForm),
+        body: JSON.stringify({
+          email: loginForm.email,
+          password: loginForm.password,
+        }),
       });
-      if (!response.ok) throw new Error("Неверный email или пароль");
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.detail || "Неверный email или пароль");
+
+      if (login) {
+        login({ email: data.email }, data.access);
+        localStorage.setItem("refresh", data.refresh);
+      }
+
       alert("Вход успешен!");
       closeModal();
     } catch (err) {
@@ -47,27 +66,42 @@ export function AuthModalButton() {
     }
   };
 
-  // Валидация и отправка регистрации
+  // Регистрация
   const handleRegister = async () => {
     const newErrors = {};
-    if (!registerForm.name.trim()) newErrors.name = "Имя обязательно";
+    if (!registerForm.full_name.trim()) newErrors.full_name = "Имя обязательно";
     if (!registerForm.email.trim()) newErrors.email = "Email обязателен";
     else if (!/^\S+@\S+\.\S+$/.test(registerForm.email)) newErrors.email = "Некорректный email";
     if (!registerForm.password) newErrors.password = "Пароль обязателен";
     else if (registerForm.password.length < 8) newErrors.password = "Минимум 8 символов";
+    if (!registerForm.password2) newErrors.password2 = "Подтвердите пароль";
+    else if (registerForm.password !== registerForm.password2) newErrors.password2 = "Пароли не совпадают";
 
     setErrors({ type: "register", ...newErrors });
     if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
     try {
-      // Замени на реальный URL
-      const response = await fetch("http://localhost:5000/register", {
+      const response = await fetch("http://localhost:8000/api/v1/user/registration/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registerForm),
+        body: JSON.stringify({
+          email: registerForm.email,
+          full_name: registerForm.full_name,
+          password: registerForm.password,
+          password2: registerForm.password2,
+        }),
       });
-      if (!response.ok) throw new Error("Ошибка регистрации");
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.detail || "Ошибка регистрации");
+
+      if (login) {
+        login({ email: data.email, full_name: data.full_name }, data.access);
+        localStorage.setItem("refresh", data.refresh);
+      }
+
       alert("Регистрация успешна!");
       closeModal();
     } catch (err) {
@@ -79,7 +113,6 @@ export function AuthModalButton() {
 
   return (
     <>
-      {/* Главная кнопка на домашней странице */}
       <button
         onClick={() => setIsOpen(true)}
         className="px-12 py-6 text-2xl font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
@@ -87,7 +120,6 @@ export function AuthModalButton() {
         Войти / Зарегистрироваться
       </button>
 
-      {/* Модальное окно */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
@@ -97,7 +129,6 @@ export function AuthModalButton() {
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Заголовок и крестик */}
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Аккаунт</h2>
               <button
@@ -108,7 +139,6 @@ export function AuthModalButton() {
               </button>
             </div>
 
-            {/* Вкладки */}
             <div className="flex justify-center mb-8 border-b border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setActiveTab("login")}
@@ -132,7 +162,6 @@ export function AuthModalButton() {
               </button>
             </div>
 
-            {/* Формы */}
             <div className="space-y-6">
               {activeTab === "login" ? (
                 <>
@@ -181,17 +210,17 @@ export function AuthModalButton() {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Имя
+                      Полное имя
                     </label>
                     <input
-                      value={registerForm.name}
-                      onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                      placeholder="Ваше имя"
+                      value={registerForm.full_name}
+                      onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })}
+                      placeholder="Иван Иванов"
                       autoFocus
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
-                    {errors.type === "register" && errors.name && (
-                      <p className="mt-2 text-sm text-red-600">{errors.name}</p>
+                    {errors.type === "register" && errors.full_name && (
+                      <p className="mt-2 text-sm text-red-600">{errors.full_name}</p>
                     )}
                   </div>
 
@@ -224,6 +253,22 @@ export function AuthModalButton() {
                     />
                     {errors.type === "register" && errors.password && (
                       <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Подтвердите пароль
+                    </label>
+                    <input
+                      type="password"
+                      value={registerForm.password2}
+                      onChange={(e) => setRegisterForm({ ...registerForm, password2: e.target.value })}
+                      placeholder="Повторите пароль"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                    {errors.type === "register" && errors.password2 && (
+                      <p className="mt-2 text-sm text-red-600">{errors.password2}</p>
                     )}
                   </div>
 

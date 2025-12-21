@@ -10,7 +10,7 @@ export function Home() {
       {/* Кнопка смены темы — работает */}
       <button
         onClick={toggleTheme}
-        className="fixed top-6 right-6 z-50 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center text-3xl hover:scale-110 transition-all duration-300"
+        className="fixed top-6 right-6 z-50 w-14 h-14 bg-gray-700 dark:bg-orange-200/50 rounded-full shadow-lg flex items-center justify-center text-3xl hover:scale-110 transition-all duration-300"
         aria-label="Переключить тему"
       >
         {isDark ? "☀️" : "🌙"}
