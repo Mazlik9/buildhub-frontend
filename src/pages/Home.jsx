@@ -6,7 +6,7 @@ export function Home() {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col items-center justify-center px-6 relative transition-colors duration-500">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden transition-colors duration-500">
       {/* Кнопка смены темы — работает */}
       <button
         onClick={toggleTheme}

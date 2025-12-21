@@ -1,19 +1,28 @@
 /* src/index.css */
 @import "tailwindcss";
 
-/* Ключевое для ручного dark mode в v4 */
+/* Ручной dark mode для v4 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Базовые стили и плавность */
+/* Плавная смена темы */
 html {
-  @apply transition-colors duration-500;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-body {
-  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen;
+/* Светлая тема — бежевый фон (orange-50) */
+html {
+  background-color: #fff7ed; /* orange-50 — мягкий бежевый */
+  color: #111827; /* тёмный текст */
 }
 
-/* Плавные переходы */
+/* Тёмная тема */
+html.dark {
+  background-color: #111827; /* gray-900 */
+  color: #f3f4f6; /* светлый текст */
+}
+
+/* Плавные переходы для всех элементов */
 * {
-  @apply transition-colors duration-300;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
