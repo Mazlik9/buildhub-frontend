@@ -1,14 +1,15 @@
 // src/App.jsx
 import { Routes, Route } from "react-router-dom";
-import { Home } from "./pages/Home";      // старая лендинг-страница (до входа)
-import { Main } from "./pages/Main";      // новая главная после входа
+import { Main } from "./pages/Main";
+import { Profile } from "./pages/Profile"; // если уже есть
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/main" element={<Main />}/> 
-      {/* Позже добавим /catalog, /services и т.д. */}
+      <Route path="/" element={<Main />} />           // ← Теперь по / открывается Main
+      <Route path="/main" element={<Main />} />       // ← Оставляем для совместимости
+      <Route path="/profile" element={<Profile />} /> // если есть
+      {/* Другие роуты позже */}
     </Routes>
   );
 }

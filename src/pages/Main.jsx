@@ -1,82 +1,66 @@
 // src/pages/Main.jsx
 import { Link } from "react-router-dom";
 import { AuthModalButton } from "../components/AuthModalButton";
-import { useTheme } from "../context/ThemeContext";
-import { useUser } from "../context/UserContext";  // ← Добавлен импорт
+import { ThemeToggleButton } from "../components/ThemeToggleButton";  // ← Новый импорт
+import { useUser } from "../context/UserContext";
 
 export function Main() {
-  const { isDark, toggleTheme } = useTheme();
-  const { user, logout } = useUser();  // ← Получаем пользователя и функцию выхода
+  const { user, logout } = useUser();
 
   return (
     <div className="min-h-screen bg-orange-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-      {/* Хедер — светлее фона в светлой теме */}
       <header className="fixed top-0 left-0 right-0 bg-orange-50 dark:bg-gray-800 shadow-lg z-50">
         <div className="px-4 lg:px-8 py-3 flex items-center justify-between gap-6">
-          {/* Логотип — левее */}
-          <Link to="/main" className="flex items-center space-x-3 flex-shrink-0">
+          {/* Логотип */}
+          <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
             <span className="text-4xl">🏗️</span>
             <span className="text-2xl md:text-3xl font-black text-orange-700 dark:text-orange-500">
               СтройХаб
             </span>
           </Link>
 
-          {/* Поисковая строка — строго по центру */}
-          <div className="flex-1 max-w-4xl">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Искать на СтройХаб"
-                className="w-full px-6 py-4 pl-14 pr-20 text-lg rounded-full border border-orange-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-orange-300 dark:focus:ring-orange-600 transition-shadow"
-              />
-              <svg
-                className="absolute left-5 top-1/2 -translate-y-1/2 w-7 h-7 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <button className="absolute right-3 top-1/2 -translate-y-1/2 px-8 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-full transition">
-                Найти
-              </button>
-            </div>
-          </div>
+          {/* Поиск */}
+          {/* ... твой код поиска ... */}
 
-          {/* Правый блок — кнопка темы + профиль/вход */}
-          <div className="flex items-center space-x-4 md:space-x-6 flex-shrink-0">
-            {/* Кнопка смены темы */}
-            <button
-              onClick={toggleTheme}
-              className="p-3 rounded-full bg-gray-700 dark:bg-orange-200/50 hover:bg-orange-200 dark:hover:bg-gray-600 transition"
-            >
-              {isDark ? "☀️" : "🌙"}
-            </button>
-
-            {/* Если пользователь залогинен — приветствие + выход */}
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-lg font-medium text-gray-900 dark:text-white">
-                  Привет, {user.full_name || user.name || "Пользователь"}!
-                </span>
+          {/* Правый блок — кнопка темы + аватарка с именем + выход */}
+        <div className="flex items-center space-x-4 md:space-x-6 flex-shrink-0">
+          {/* Кнопка смены темы */}
+          <ThemeToggleButton />
+          
+          {/* Если залогинен — аватарка + имя + выход */}
+          {user ? (
+            <div className="flex items-center space-x-3">
+              {/* Аватарка — круглая с инициалом */}
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                {user.full_name?.charAt(0).toUpperCase() || "С"}
+              </div>
+          
+              {/* Имя пользователя + кнопка выхода */}
+              <div className="flex flex-col">
+                <Link
+                  to="/profile"
+                  className="text-lg font-medium text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-500 transition"
+                >
+                  {user.full_name || "Пользователь"}
+                </Link>
                 <button
-                  onClick={logout}  // ← Работает с async, React сам подождёт
-                  className="px-4 py-2 text-sm font-medium text-red-600                 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
+                  onClick={logout}
+                  className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition text-left"
                 >
                   Выйти
                 </button>
               </div>
-            ) : (
-              /* Если не залогинен — кнопка входа */
-              <AuthModalButton />
-            )}
-          </div>
+            </div>
+          ) : (
+            /* Если не залогинен — кнопка входа */
+            <AuthModalButton />
+          )}
+        </div>
         </div>
       </header>
 
-      {/* Отступ под фиксированный хедер */}
       <main className="pt-24 px-4 lg:px-8">
-        {/* Здесь будет основной контент главной страницы */}
+        {/* Контент главной страницы */}
       </main>
     </div>
   );

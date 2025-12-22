@@ -62,7 +62,7 @@ export function AuthModalButton() {
 
       alert("Вход успешен!");
       closeModal();
-      navigate("/main");
+      navigate("/");
     } catch (err) {
       alert(err.message || "Ошибка входа");
     } finally {
@@ -109,7 +109,7 @@ export function AuthModalButton() {
 
       alert("Регистрация успешна!");
       closeModal();
-      navigate("/main");
+      navigate("/");
     } catch (err) {
       alert(err.message || "Ошибка регистрации");
     } finally {
