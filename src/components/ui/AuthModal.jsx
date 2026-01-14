@@ -1,10 +1,31 @@
 // src/components/ui/AuthModal.jsx
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
+import { loginUser } from '@/api/authApi';
+
+// Схема валидации для логина
+const loginSchema = z.object({
+  login: z.string().min(1, 'Введите логин или email'),
+  password: z.string().min(1, 'Введите пароль'),
+});
 
 export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Закрытие по Esc + блокировка скролла (без изменений)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
+
+  // Закрытие по Esc
   useEffect(() => {
     if (!isOpen) return;
     const handleEsc = (e) => {
@@ -14,6 +35,7 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
+  // Блокировка скролла
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -24,6 +46,45 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
       document.body.style.overflow = '';
     };
   }, [isOpen]);
+
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+
+    try {
+      const response = await loginUser({
+        login: data.login,    // может быть email или username
+        password: data.password,
+      });
+
+      // Сохраняем токены и данные пользователя
+      localStorage.setItem('accessToken', response.access);
+      localStorage.setItem('refreshToken', response.refresh);
+      
+      // Опционально: сохраняем данные пользователя (для быстрого доступа)
+      localStorage.setItem('userData', JSON.stringify({
+        email: response.email,
+        phone: response.phone,
+        full_name: response.full_name,
+      }));
+
+      toast.success(`Добро пожаловать, ${response.full_name}!`);
+      reset(); // очищаем форму
+      onClose();
+
+      // Опционально: перезагрузка или обновление состояния
+      // window.location.reload();
+    } catch (error) {
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.login?.[0] ||
+        error.response?.data?.password?.[0] ||
+        error.message ||
+        'Ошибка входа. Проверьте логин и пароль.';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -36,7 +97,7 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
         className="
           relative 
           w-[92%] sm:w-[85%] md:w-[668px] lg:w-[668px]
-          min-h-[70vh] md:min-h-[859px] lg:min-h-[859px]
+          min-h-[50vh] sm:min-h-[60vh] md:min-h-[859px] lg:min-h-[859px]
           max-h-[92vh] lg:max-h-[90vh]
           bg-white/90 backdrop-blur-xl
           rounded-3xl shadow-2xl overflow-hidden
@@ -52,9 +113,9 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
             bg-gray-100 hover:bg-gray-200 
             flex items-center justify-center 
             transition-all duration-200
-            shadow-[0_4px_12px_rgba(0,0,0,0.3)]           /* тень 30% — заметная, но мягкая */
-            hover:shadow-[0_6px_16px_rgba(0,0,0,0.4)]     /* усиление при наведении */
-            active:scale-95                               /* лёгкое нажатие */
+            shadow-[0_4px_12px_rgba(0,0,0,0.3)]
+            hover:shadow-[0_6px_16px_rgba(0,0,0,0.4)]
+            active:scale-95
             z-10
           "
           aria-label="Закрыть"
@@ -64,21 +125,18 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
           </svg>
         </button>
 
-        {/* Контент с более высоким позиционированием сверху и воздухом снизу */}
-        <div className="flex flex-col items-center pt-24 md:pt-45 lg:pt-45 pb-16 md:pb-20 lg:pb-24 px-6 sm:px-12 md:px-16">
-          {/* Заголовок */}
+        {/* Контент */}
+        <div className="flex flex-col items-center pt-16 pb-16 md:pt-20 lg:pt-24 px-6 sm:px-12 md:px-16 overflow-y-auto max-h-[85vh]">
           <h2 className="text-3xl sm:text-4xl md:text-[42px] font-bold text-center text-black mb-4">
             Авторизация
           </h2>
 
-          {/* Подзаголовок */}
-          <p className="text-center text-gray-500 text-base md:text-lg mb-10 md:mb-12 leading-relaxed max-w-[400px]">
-            для входа необходимо ввести<br className="sm:hidden" /> номер телефона и пароль
+          <p className="text-center text-gray-500 text-base md:text-lg mb-10 leading-relaxed max-w-[400px]">
+            для входа необходимо ввести номер телефона и пароль
           </p>
 
-          {/* Форма и кнопки */}
-          <div className="w-full max-w-[328px] space-y-5 flex flex-col items-center">
-            {/* Поле Телефон / Email */}
+          <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[328px] space-y-5">
+            {/* Поле Логин (телефон или email) */}
             <input
               type="text"
               placeholder="Телефон или email"
@@ -89,10 +147,14 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
                 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30
                 transition-all
               "
+              {...register('login')}
             />
+            {errors.login && (
+              <p className="text-red-500 text-sm mt-1">{errors.login.message}</p>
+            )}
 
             {/* Поле Пароль */}
-            <div className="relative w-full">
+            <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Пароль"
@@ -103,6 +165,7 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
                   focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30
                   transition-all
                 "
+                {...register('password')}
               />
               <button
                 type="button"
@@ -123,40 +186,48 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
                 )}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            )}
 
             {/* Забыли пароль? */}
-            <div className="w-full text-right mt-1 mb-3">
+            <div className="w-full text-right mt-2">
               <a href="#" className="text-gray-500 text-sm hover:underline hover:text-orange-600 transition-colors">
                 Забыли пароль?
               </a>
             </div>
 
             {/* Кнопки */}
-            <div className="w-full space-y-4">
+            <div className="w-full mt-8 space-y-4">
               <button
+                type="submit"
+                disabled={isLoading}
                 className="
                   w-full h-[56px]
                   bg-[#FCA311] hover:bg-[#f59e0b] active:bg-[#e69500]
                   text-white font-bold text-lg rounded-xl
                   shadow-md hover:shadow-lg transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed
                 "
               >
-                Войти
+                {isLoading ? 'Вход...' : 'Войти'}
               </button>
 
               <button
                 onClick={onSwitchToRegister}
+                disabled={isLoading}
                 className="
                   w-full h-[56px]
                   border-2 border-[#FCA311] hover:bg-[#FFF7EB]
                   text-[#FCA311] font-medium text-lg rounded-xl
                   transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed
                 "
               >
                 Зарегистрироваться
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
