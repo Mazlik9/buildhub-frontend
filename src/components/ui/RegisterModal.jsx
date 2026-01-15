@@ -4,9 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { registerUser } from '@/api/authApi';  // ← используем твой готовый файл!
+import { registerUser } from '@/api/authApi';
+import { useNavigate } from 'react-router-dom'; // ← добавили для редиректа
 
-// Схема валидации (zod)
+// Схема валидации
 const registerSchema = z.object({
   full_name: z.string().min(2, 'Введите полное имя'),
   email: z.string().email('Некорректный email'),
@@ -21,6 +22,8 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate(); // ← хук для редиректа
 
   const {
     register,
@@ -64,22 +67,30 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
         password2: data.password2,
       });
 
-      // Сохраняем токены из ответа бэкенда
+      // Сохраняем токены
       localStorage.setItem('accessToken', response.access);
       localStorage.setItem('refreshToken', response.refresh);
 
-      toast.success('Регистрация успешна! Вы вошли в систему.');
-      reset(); // очищаем форму
+      // Опционально сохраняем данные пользователя
+      localStorage.setItem('userData', JSON.stringify({
+        email: response.email,
+        full_name: response.full_name,
+      }));
+
+      toast.success('Регистрация успешна! Добро пожаловать!');
+      reset();
       onClose();
 
-      // Опционально: можно перезагрузить страницу или обновить глобальное состояние
-      // window.location.reload();
+      // ← РЕДИРЕКТ НА ПРОФИЛЬ
+      navigate('/profile'); // ← сюда перенаправляем после регистрации
+
     } catch (error) {
-      // Обрабатываем ошибку от бэкенда
       const message =
         error.response?.data?.detail ||
         error.response?.data?.email?.[0] ||
+        error.response?.data?.full_name?.[0] ||
         error.response?.data?.password?.[0] ||
+        error.response?.data?.password2?.[0] ||
         error.message ||
         'Ошибка регистрации. Попробуйте позже.';
       toast.error(message);

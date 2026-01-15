@@ -5,8 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { loginUser } from '@/api/authApi';
+import { useNavigate } from 'react-router-dom'; // ← для редиректа
 
-// Схема валидации для логина
+// Валидация формы
 const loginSchema = z.object({
   login: z.string().min(1, 'Введите логин или email'),
   password: z.string().min(1, 'Введите пароль'),
@@ -15,6 +16,8 @@ const loginSchema = z.object({
 export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate(); // ← хук для редиректа
 
   const {
     register,
@@ -49,18 +52,17 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-
     try {
       const response = await loginUser({
-        login: data.login,    // может быть email или username
+        login: data.login,
         password: data.password,
       });
 
-      // Сохраняем токены и данные пользователя
+      // Сохраняем токены
       localStorage.setItem('accessToken', response.access);
       localStorage.setItem('refreshToken', response.refresh);
-      
-      // Опционально: сохраняем данные пользователя (для быстрого доступа)
+
+      // Опционально сохраняем данные пользователя
       localStorage.setItem('userData', JSON.stringify({
         email: response.email,
         phone: response.phone,
@@ -68,11 +70,12 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
       }));
 
       toast.success(`Добро пожаловать, ${response.full_name}!`);
-      reset(); // очищаем форму
+      reset();
       onClose();
 
-      // Опционально: перезагрузка или обновление состояния
-      // window.location.reload();
+      // ← РЕДИРЕКТ НА ПРОФИЛЬ
+      navigate('/profile');
+
     } catch (error) {
       const message =
         error.response?.data?.detail ||
@@ -95,7 +98,7 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
     >
       <div
         className="
-          relative 
+          relative
           w-[92%] sm:w-[85%] md:w-[668px] lg:w-[668px]
           min-h-[50vh] sm:min-h-[60vh] md:min-h-[859px] lg:min-h-[859px]
           max-h-[92vh] lg:max-h-[90vh]
@@ -108,10 +111,10 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
         <button
           onClick={onClose}
           className="
-            absolute right-5 top-5 
-            w-10 h-10 rounded-full 
-            bg-gray-100 hover:bg-gray-200 
-            flex items-center justify-center 
+            absolute right-5 top-5
+            w-10 h-10 rounded-full
+            bg-gray-100 hover:bg-gray-200
+            flex items-center justify-center
             transition-all duration-200
             shadow-[0_4px_12px_rgba(0,0,0,0.3)]
             hover:shadow-[0_6px_16px_rgba(0,0,0,0.4)]
@@ -136,12 +139,12 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[328px] space-y-5">
-            {/* Поле Логин (телефон или email) */}
+            {/* Поле Логин */}
             <input
               type="text"
               placeholder="Телефон или email"
               className="
-                w-full h-[56px] px-6 
+                w-full h-[56px] px-6
                 bg-white border border-gray-300 rounded-xl
                 text-base text-gray-800 placeholder:text-gray-400
                 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/30

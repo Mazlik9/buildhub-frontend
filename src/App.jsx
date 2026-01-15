@@ -1,8 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';           // ← твоя главная страница
-// import Login from './pages/Login';      // добавишь позже
-// import AdsList from './pages/AdsList';  // и остальные страницы тоже
+import Home from './pages/Home';
+import ProfilePage from '@/features/profile/ProfilePage';
 
 function App() {
   return (
@@ -10,6 +9,7 @@ function App() {
       <Routes>
         {/* Главная страница открывается по адресу "/" */}
         <Route path="/" element={<Home />} />
+        <Route path="/profile" element={<ProfilePage />} />
 
         {/* Примеры будущих маршрутов */}
         {/* <Route path="/login" element={<Login />} /> */}
