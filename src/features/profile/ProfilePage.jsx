@@ -1,37 +1,39 @@
-import React, { useState } from 'react';
-import Header from "./components/ProfileHeader";
+import React, { useState, useEffect } from 'react';
+import Header from "@/components/layout/header/Header";
 import ProfileSideBar from "./components/ProfileSidebar";
 import ProfileEditForm from "./components/ProfileEditForm";
 
 const ProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [userData, setUserData] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleLogoClick = () => {
-    console.log('Нажатие на логотип');
-  };
+  // Получаем данные пользователя из localStorage
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const savedUserData = localStorage.getItem('userData');
+    if (token && savedUserData) {
+      setIsLoggedIn(true);
+      setUserData(JSON.parse(savedUserData));
+    }
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleEditProfile = () => {
-    console.log('Редактировать профиль');
-  };
-
-  const handleMyAds = () => {
-    console.log('Мои объявления');
-  };
-
-  const handleMyCompanies = () => {
-    console.log('Мои компании');
-  };
-
   const handleLogout = () => {
-    console.log('Выход из аккаунта');
+    // Удаляем токены из localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userData');
+    // Редирект на главную страницу
+    window.location.href = '/';
   };
 
   const handleSaveProfile = (formData) => {
     console.log('Сохранение данных профиля:', formData);
+    // Здесь можно добавить логику сохранения данных профиля
   };
 
   const handleCancelProfile = () => {
@@ -42,30 +44,46 @@ const ProfilePage = () => {
     console.log('Смена пароля');
   };
 
+  // Функция для получения инициалов из имени пользователя
+  const getInitials = (fullName) => {
+    if (!fullName) return 'U';
+    
+    const nameParts = fullName.split(' ');
+    if (nameParts.length === 1) {
+      return nameParts[0].charAt(0).toUpperCase();
+    }
+    
+    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f6f5] overflow-x-hidden">
-      {/* Header без лишних элементов */}
+      {/* Используем тот же Header что и на главной странице */}
       <Header
-        onLogoClick={handleLogoClick}
-        onSearchChange={handleSearchChange}
-        searchQuery={searchQuery}
+        setIsAuthModalOpen={() => {}} // Пустая функция, так как на странице профиля не нужно модальное окно
+        isLoggedIn={isLoggedIn}
+        onLogout={handleLogout}
+        userData={userData}
+        getInitials={getInitials}
       />
 
       {/* Основной контент - центрированный с отступами */}
-      <div className="flex justify-center px-[150px] mt-8">
-        <div className="flex gap-8 w-full max-w-[1598px]">
+      <div className="flex justify-center px-4 sm:px-8 md:px-12 lg:px-[150px] mt-8">
+        <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1598px]">
+          {/* Боковая панель профиля */}
           <ProfileSideBar
-            onEditProfile={handleEditProfile}
-            onMyAds={handleMyAds}
-            onMyCompanies={handleMyCompanies}
+            onEditProfile={() => console.log('Редактировать профиль')}
+            onMyAds={() => console.log('Мои объявления')}
+            onMyCompanies={() => console.log('Мои компании')}
             onLogout={handleLogout}
           />
           
+          {/* Форма редактирования профиля */}
           <ProfileEditForm
             initialData={{
-              email: 'ivanov@example.com',
-              fullName: 'Иванов Иван Иванович',
-              phone: '+7 (999) 123-45-67',
+              email: userData?.email || 'ivanov@example.com',
+              fullName: userData?.full_name || 'Иванов Иван Иванович',
+              phone: userData?.phone || '+7 (999) 123-45-67',
               birthDate: '1990-01-01',
               gender: 'male'
             }}
