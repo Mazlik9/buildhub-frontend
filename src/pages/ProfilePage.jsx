@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Header from "@/components/layout/header/Header";
-import ProfileSideBar from "./components/ProfileSidebar";
-import ProfileEditForm from "./components/ProfileEditForm";
+import ProfileSideBar from "../features/profile/components/ProfileSidebar";
+import ProfileEditForm from "../features/profile/components/ProfileEditForm";
 
 const ProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,29 +43,8 @@ const ProfilePage = () => {
     console.log('Смена пароля');
   };
 
-  // Функция для получения инициалов из имени пользователя
-  const getInitials = (fullName) => {
-    if (!fullName) return 'U';
-    
-    const nameParts = fullName.split(' ');
-    if (nameParts.length === 1) {
-      return nameParts[0].charAt(0).toUpperCase();
-    }
-    
-    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
-  };
-
   return (
     <div className="min-h-screen bg-[#f4f6f5] overflow-x-hidden">
-      {/* Используем тот же Header что и на главной странице */}
-      <Header
-        setIsAuthModalOpen={() => {}} // Пустая функция, так как на странице профиля не нужно модальное окно
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
-        userData={userData}
-        getInitials={getInitials}
-      />
-
       {/* Основной контент - центрированный с отступами */}
       <div className="flex justify-center px-4 sm:px-8 md:px-12 lg:px-[150px] mt-8">
         <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1598px]">
