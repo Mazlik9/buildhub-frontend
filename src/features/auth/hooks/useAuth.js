@@ -7,6 +7,15 @@ export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const getInitials = (fullName) => {
+    if (!fullName) return 'U';
+    const names = fullName.trim().split(/\s+/);
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0][0].toUpperCase();
+  };
+
   const login = useCallback(async ({ login, password }) => {
     setIsLoading(true);
     try {
@@ -46,6 +55,7 @@ export const useAuth = () => {
       setUser({
         email: response.email,
         full_name: response.full_name,
+        avatar: null,
       });
 
       toast.success(`Регистрация успешна! Добро пожаловать, ${response.full_name || 'пользователь'}!`);
@@ -66,5 +76,13 @@ export const useAuth = () => {
     toast.info('Вы вышли из аккаунта');
   }, []);
 
-  return { user, isLoading, login, register, logout };
+  return {
+    user,
+    isLoggedIn: !!user,
+    isLoading,
+    login,
+    register,
+    logout,
+    getInitials,
+  };
 };
