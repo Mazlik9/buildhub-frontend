@@ -72,11 +72,11 @@ export const AuthModal = ({
         style={{ boxShadow: '0px 4px 20px 0 rgba(0,0,0,0.2)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Крестик закрытия с круглым фоном - исправленная версия */}
+      {/* Крестик закрытия с круглым фоном - исправленная версия */}
         <button
           onClick={onClose}
           disabled={isLoading}
-          className="absolute left-[596px] top-[15px] w-[59px] h-[59px] flex items-center justify-center"
+          className="absolute left-[596px] top-[15px] w-[59px] h-[59px]"
         >
           <svg
             width={59}
@@ -84,11 +84,18 @@ export const AuthModal = ({
             viewBox="0 0 59 59"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
             className="absolute inset-0"
           >
             <g filter="url(#filter0_d_2384_175)">
               <circle cx="29.5" cy="29.5" r="25.5" fill="#E4E4E4" />
+            </g>
+            <g filter="url(#filter0_i_2384_176)">
+              <path
+                d="M19 19L40 40M40 19L19 40"
+                stroke="#BFBFBF"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
             </g>
             <defs>
               <filter
@@ -119,31 +126,12 @@ export const AuthModal = ({
                   result="shape"
                 />
               </filter>
-            </defs>
-          </svg>
-          <svg
-            width={20}
-            height={20}
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <g filter="url(#filter0_i_2384_176)">
-              <path
-                d="M1 1L10 10M19 19L10 10M10 10L19 1M10 10L1 19"
-                stroke="#BFBFBF"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-            </g>
-            <defs>
               <filter
                 id="filter0_i_2384_176"
-                x={0}
-                y={0}
-                width={20}
-                height={20}
+                x={17}
+                y={17}
+                width={25}
+                height={25}
                 filterUnits="userSpaceOnUse"
                 colorInterpolationFilters="sRGB"
               >
