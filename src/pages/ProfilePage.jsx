@@ -2,11 +2,10 @@
 import { useState } from 'react';
 import { useAuthContext } from '@/features/auth/AuthProvider';
 import { useProfile } from '@/features/profile/hooks/useProfile';
-import ProfileSidebar from '@/features/profile/components/ProfileSidebar';
-import ProfileEditForm from '@/features/profile/components/ProfileEditForm';
-// Пока заглушки — потом заменишь на реальные компоненты
-import ProfileAds from '@/features/profile/components/ProfileAds';
-import ProfileCompanies from '@/features/profile/components/ProfileCompanies';
+import ProfileSideBar from '@/features/profile/components/ProfileSideBar';
+import ProfileEditForm from '@/features/profile/components/ProfileEditForm/ProfileEditForm';
+import ProfileAds from '@/features/profile/components/ProfileAds/ProfileAds';
+import ProfileCompanies from '@/features/profile/components/ProfileCompanies/ProfileCompanies';
 
 export default function ProfilePage() {
   const { isLoggedIn } = useAuthContext();
@@ -69,7 +68,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#f4f6f5] py-10 px-4 sm:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
         {/* Боковая панель с навигацией */}
-        <ProfileSidebar
+        <ProfileSideBar
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />

@@ -1,9 +1,9 @@
-// src/features/profile/components/ProfileSidebar.jsx
+// src/features/profile/components/ProfileSideBar.jsx
 import { useRef } from 'react';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { useAuthContext } from '@/features/auth/AuthProvider';
 
-export default function ProfileSidebar({ activeTab, onTabChange }) {
+export default function ProfileSideBar({ activeTab, onTabChange }) {
   const { profile, updateAvatar, loading } = useProfile();
   const { logout } = useAuthContext(); // берём logout из глобального контекста
 
