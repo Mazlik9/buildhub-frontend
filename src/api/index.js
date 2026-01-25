@@ -1,25 +1,21 @@
 // src/api/index.js
-/**
- * Единая точка входа для импорта API
- */
+// ==================== Единая точка входа для API ====================
 
-// Экспорт axios instance
+// Axios instance
 export { default as api } from './axiosInstance';
-export * from './axiosInstance'; // setAuthTokens, clearAuthTokens, etc
 
-// Экспорт endpoints
+// Endpoints
 export { default as endpoints } from './endpoints';
+export * from './endpoints';
 
-// Экспорт всех сервисов
-export { default as services } from './services';
-export * from './services'; // Именованный экспорт всех сервисов
+// Services
+export { default as apiServices } from './services';
+export * from './services';
 
-// Удобные алиасы для часто используемых сервисов
-export { authService, userSelfService } from './services';
-export { companyService } from './services';
-export { adService } from './services';
-export { categoryService } from './services';
-export { actorService } from './services';
-
-// Экспорт функций из authApi.js для обратной совместимости
-export { registerUser, loginUser, logoutUser } from './services';
+// ==================== Удобные алиасы для часто используемых сервисов ====================
+export const authService = apiServices.auth;
+export const userSelfService = apiServices.userSelf;
+export const companyService = apiServices.companies;
+export const adService = apiServices.ads;
+export const categoryService = apiServices.categories;
+export const actorService = apiServices.actors;

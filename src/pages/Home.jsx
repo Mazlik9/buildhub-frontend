@@ -1,6 +1,4 @@
 // src/pages/Home.jsx
-import Header from '@/shared/layout/Header';
-
 
 export default function Home() {
   return (

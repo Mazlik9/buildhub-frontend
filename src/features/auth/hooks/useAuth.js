@@ -1,79 +1,67 @@
 // src/features/auth/hooks/useAuth.js
 import { useState, useCallback } from 'react';
-import { authService, setAuthTokens } from '@/api';
+import { apiServices } from '@/api/services';
+import { clearAuthTokens, setAuthTokens } from '@/shared/lib/authTokens';
 import { toast } from 'sonner';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const getInitials = (fullName) => {
-    if (!fullName) return 'U';
-    const names = fullName.trim().split(/\s+/);
-    if (names.length >= 2) {
-      return (names[0][0] + names[1][0]).toUpperCase();
-    }
-    return names[0][0].toUpperCase();
-  };
-
-  const login = useCallback(async ({ login, password }) => {
+  const login = useCallback(async (data) => {
     setIsLoading(true);
     try {
-      const response = await authService.login({ login, password });
-
-      if (response.access && response.refresh) {
-        setAuthTokens(response.access, response.refresh);
-      }
+      const res = await apiServices.auth.login(data);
+      setAuthTokens(res.access, res.refresh);
 
       setUser({
-        email: response.email,
-        full_name: response.full_name,
-        avatar: response.avatar || null,
+        email: res.email,
+        full_name: res.full_name,
+        avatar: res.avatar || null,
       });
 
-      toast.success(`Добро пожаловать, ${response.full_name || 'пользователь'}!`);
-      return response;
-    } catch (error) {
-      let errorMessage = 'Ошибка входа. Проверьте логин и пароль.';
-      if (error.response?.data?.detail) errorMessage = error.response.data.detail;
-      toast.error(errorMessage);
-      throw error;
+      toast.success('Добро пожаловать!');
+      return res;
+    } catch (e) {
+      toast.error('Ошибка входа');
+      throw e;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const register = useCallback(async ({ full_name, email, password, password2 }) => {
+  const register = useCallback(async (data) => {
     setIsLoading(true);
     try {
-      const response = await authService.register({ full_name, email, password, password2 });
-
-      if (response.access && response.refresh) {
-        setAuthTokens(response.access, response.refresh);
-      }
+      const res = await apiServices.auth.register(data);
+      setAuthTokens(res.access, res.refresh);
 
       setUser({
-        email: response.email,
-        full_name: response.full_name,
+        email: res.email,
+        full_name: res.full_name,
         avatar: null,
       });
 
-      toast.success(`Регистрация успешна! Добро пожаловать, ${response.full_name || 'пользователь'}!`);
-      return response;
-    } catch (error) {
-      let errorMessage = 'Ошибка регистрации.';
-      if (error.response?.data?.detail) errorMessage = error.response.data.detail;
-      toast.error(errorMessage);
-      throw error;
+      toast.success('Регистрация успешна!');
+      return res;
+    } catch (e) {
+      toast.error('Ошибка регистрации');
+      throw e;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const logout = useCallback(() => {
-    setUser(null);
-    setAuthTokens(null, null);
-    toast.info('Вы вышли из аккаунта');
+  const logout = useCallback(async () => {
+    try {
+      await apiServices.auth.logout();
+    } catch {
+      // игнор
+    } finally {
+      clearAuthTokens();
+      setUser(null);
+      toast.info('Вы вышли');
+    }
   }, []);
 
   return {
@@ -83,6 +71,5 @@ export const useAuth = () => {
     login,
     register,
     logout,
-    getInitials,
   };
 };

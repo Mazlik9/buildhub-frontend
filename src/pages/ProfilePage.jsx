@@ -6,15 +6,15 @@ import ProfileSideBar from '@/features/profile/components/ProfileSideBar';
 import ProfileEditForm from '@/features/profile/components/ProfileEditForm/ProfileEditForm';
 import ProfileAds from '@/features/profile/components/ProfileAds/ProfileAds';
 import ProfileCompanies from '@/features/profile/components/ProfileCompanies/ProfileCompanies';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const { isLoggedIn } = useAuthContext();
+  const { isLoggedIn, openLoginModal } = useAuthContext(); // предполагаем, что есть метод открытия модалки
   const { profile, loading, error } = useProfile();
 
-  // Текущая вкладка: 'edit' | 'ads' | 'companies'
   const [activeTab, setActiveTab] = useState('edit');
 
-  // Если не залогинен — показываем сообщение или редиректим
+  // Если пользователь не залогинен — показываем модалку логина или сообщение
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f4f6f5]">
@@ -24,7 +24,13 @@ export default function ProfilePage() {
             Пожалуйста, войдите в аккаунт, чтобы посмотреть профиль
           </p>
           <button
-            onClick={() => {/* здесь можно открыть модалку логина */}}
+            onClick={() => {
+              if (openLoginModal) {
+                openLoginModal(); // открываем модалку логина
+              } else {
+                toast('Функция логина временно недоступна');
+              }
+            }}
             className="px-8 py-4 bg-gradient-to-r from-[#fca311] to-[#ef6c1a] text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition"
           >
             Войти
@@ -54,7 +60,7 @@ export default function ProfilePage() {
           <h2 className="text-3xl font-bold text-red-600 mb-4">Что-то пошло не так</h2>
           <p className="text-gray-600 mb-6">{error || 'Профиль не удалось загрузить'}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => toast('Попробуйте обновить страницу или зайти позже')}
             className="px-8 py-4 bg-gradient-to-r from-[#fca311] to-[#ef6c1a] text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition"
           >
             Попробовать снова
@@ -64,21 +70,17 @@ export default function ProfilePage() {
     );
   }
 
+  // Основной контент профиля
   return (
     <div className="min-h-screen bg-[#f4f6f5] py-10 px-4 sm:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-        {/* Боковая панель с навигацией */}
-        <ProfileSideBar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+        {/* Боковая панель */}
+        <ProfileSideBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Основной контент — зависит от выбранной вкладки */}
+        {/* Контент вкладок */}
         <div className="flex-1">
-          {activeTab === 'edit' && <ProfileEditForm />}
-
+          {activeTab === 'edit' && <ProfileEditForm profile={profile} />}
           {activeTab === 'ads' && <ProfileAds />}
-
           {activeTab === 'companies' && <ProfileCompanies />}
         </div>
       </div>
