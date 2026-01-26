@@ -1,27 +1,30 @@
 // src/features/profile/hooks/useProfile.js
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '@/features/auth/AuthProvider';
-import { apiServices } from '@/api/services';
+import {
+  getProfile,
+  updateProfile as apiUpdateProfile,
+  changeAvatar as apiChangeAvatar,
+} from '@/api/services';
 import { toast } from 'sonner';
 
 export const useProfile = () => {
-  const { user, setUser } = useAuthContext(); // setUser будет undefined, если используем только контекст без модификации user. Добавим проверку.
+  const { user, isInitialized, updateUser } = useAuthContext();
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!user);
   const [error, setError] = useState(null);
 
   // ===== Получение профиля =====
   const fetchProfile = useCallback(async () => {
+    if (!isInitialized) return;
+
     setLoading(true);
     setError(null);
-    try {
-      const data = await apiServices.userSelf.getProfile();
-      setProfile(data);
 
-      if (typeof setUser === 'function') {
-        setUser(data);
-      }
+    try {
+      const data = await getProfile();
+      updateUser(data);
+      return data;
     } catch (err) {
       console.error('Ошибка загрузки профиля:', err);
       setError('Не удалось загрузить данные профиля');
@@ -29,32 +32,33 @@ export const useProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [setUser]);
+  }, [updateUser, isInitialized]);
 
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    if (!user && isInitialized) fetchProfile();
+  }, [fetchProfile, user, isInitialized]);
 
   // ===== Обновление профиля =====
   const updateProfile = useCallback(
     async (updatedData) => {
+      setLoading(true);
+      setError(null);
+
       try {
-        const newData = await apiServices.userSelf.updateProfile(updatedData);
-        setProfile(newData);
-
-        if (typeof setUser === 'function') {
-          setUser(newData);
-        }
-
+        const newData = await apiUpdateProfile(updatedData);
+        updateUser(newData);
         toast.success('Профиль успешно обновлён');
         return newData;
       } catch (err) {
         console.error('Ошибка обновления профиля:', err);
+        setError('Не удалось сохранить изменения');
         toast.error('Не удалось сохранить изменения');
         throw err;
+      } finally {
+        setLoading(false);
       }
     },
-    [setUser]
+    [updateUser]
   );
 
   // ===== Обновление аватара =====
@@ -66,14 +70,8 @@ export const useProfile = () => {
       formData.append('avatar', file);
 
       try {
-        const updated = await apiServices.userSelf.changeAvatar(formData);
-
-        setProfile((prev) => ({ ...prev, avatar: updated.avatar }));
-
-        if (typeof setUser === 'function') {
-          setUser((prev) => ({ ...prev, avatar: updated.avatar }));
-        }
-
+        const updated = await apiChangeAvatar(formData);
+        updateUser(prev => ({ ...prev, avatar: updated.avatar }));
         toast.success('Аватар успешно обновлён');
         return updated;
       } catch (err) {
@@ -82,11 +80,11 @@ export const useProfile = () => {
         throw err;
       }
     },
-    [setUser]
+    [updateUser]
   );
 
   return {
-    profile,
+    profile: user,
     loading,
     error,
     fetchProfile,

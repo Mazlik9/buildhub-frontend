@@ -3,77 +3,71 @@ import axios from 'axios';
 import {
   getAccessToken,
   isAccessTokenExpiredSoon,
-  clearAuthTokens,
-  setAuthTokens,
-  getRefreshToken,
 } from '@/shared/lib/authTokens';
-import { refreshToken } from './services';
+import { refreshAccessToken } from './refreshApi';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 15000,
 });
 
-// ================== Очередь для запросов ==================
-let isRefreshing = false;
-let failedQueue = [];
+/* ================= Refresh queue ================= */
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
+let isRefreshing = false;
+let refreshQueue = [];
+
+const resolveQueue = (error, token = null) => {
+  refreshQueue.forEach(promise => {
+    if (error) promise.reject(error);
+    else promise.resolve(token);
   });
-  failedQueue = [];
+  refreshQueue = [];
 };
 
-// ================= Request interceptor ==================
+/* ================= Request interceptor ================= */
+
 api.interceptors.request.use(
-  async (config) => {
+  async config => {
     if (config.skipAuth) return config;
 
     let token = getAccessToken();
 
-    // Если токен скоро истечёт
     if (token && isAccessTokenExpiredSoon()) {
       if (!isRefreshing) {
         isRefreshing = true;
+
         try {
-          const newToken = await refreshToken(); // из services.js
-          token = newToken;
-          setAuthTokens(newToken, getRefreshToken()); // обновляем локально
-          processQueue(null, newToken);
+          const newAccessToken = await refreshAccessToken();
+          token = newAccessToken;
+          resolveQueue(null, newAccessToken);
         } catch (err) {
-          processQueue(err, null);
-          clearAuthTokens();
-          token = null;
+          resolveQueue(err, null);
+          throw err;
         } finally {
           isRefreshing = false;
         }
       } else {
-        // Ждём пока текущий refresh завершится
         token = await new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
+          refreshQueue.push({ resolve, reject });
         });
       }
     }
 
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
 
     return config;
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error)
 );
 
-// ================= Response interceptor ==================
-// Можно ловить 401 ошибки, если нужно, и очищать токены
+/* ================= Response interceptor ================= */
+
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      clearAuthTokens();
-    }
+  response => response,
+  error => {
+    // ❗️ НЕ чистим токены здесь
     return Promise.reject(error);
   }
 );

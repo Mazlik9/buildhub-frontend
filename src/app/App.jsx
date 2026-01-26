@@ -1,22 +1,20 @@
 // src/App.jsx
-import { AuthProvider } from '@/features/auth/AuthProvider';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from '../pages/Home';
-import ProfilePage from '../pages/ProfilePage';
 import Header from '@/shared/layout/Header';
+import { AuthProvider } from '@/features/auth/AuthProvider';
+import Home from '@/pages/Home';
+import ProfilePage from '@/pages/ProfilePage';
 
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Header /> 
+    <AuthProvider>
+      <BrowserRouter>
+        <Header />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
-
-export default App;

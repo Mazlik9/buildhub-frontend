@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { apiServices } from '@/api/services'; // ✅ импорт напрямую из services.js
+import { createCompany } from '@/api/services';
 
 // =================== Схема валидации ===================
 const companySchema = z.object({
@@ -21,7 +21,6 @@ const companySchema = z.object({
   logo: z.any().optional(),
 });
 
-// =================== Компонент ===================
 export default function CompanyCreateModal({ isOpen, onClose, onSuccess }) {
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
@@ -50,29 +49,19 @@ export default function CompanyCreateModal({ isOpen, onClose, onSuccess }) {
 
   const onSubmit = async (data) => {
     try {
-      const payload = {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        inn: data.inn,
-        address: data.address,
-        description: data.description,
-      };
-
-      // Если есть логотип, отправляем как FormData
       if (logoFile) {
         const formData = new FormData();
-        Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+        Object.keys(data).forEach(key => formData.append(key, data[key]));
         formData.append('logo', logoFile);
-        await apiServices.companies.createCompany(formData);
+        await createCompany(formData);
       } else {
-        await apiServices.companies.createCompany(payload);
+        await createCompany(data);
       }
 
       toast.success('Компания успешно создана!');
-      onSuccess();        // уведомляем родителя (ProfileCompanies)
-      onClose();          // закрываем модалку
-      reset();            // сбрасываем форму
+      onSuccess?.();
+      onClose?.();
+      reset();
       setLogoPreview(null);
       setLogoFile(null);
     } catch (err) {

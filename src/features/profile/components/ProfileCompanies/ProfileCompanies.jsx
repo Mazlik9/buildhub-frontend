@@ -1,7 +1,10 @@
 // src/features/profile/components/ProfileCompanies/ProfileCompanies.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { apiServices } from '@/api/services'; // ✅ импорт напрямую из services.js
+import {
+  getMyCompanies,
+  getCompanyBySlug,
+} from '@/api/services';
 import CompanyCreateModal from './CompanyCreateModal';
 
 export default function ProfileCompanies() {
@@ -9,16 +12,16 @@ export default function ProfileCompanies() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [expandedCompanyId, setExpandedCompanyId] = useState(null);
+  const [expandedCompanySlug, setExpandedCompanySlug] = useState(null);
   const [expandedDetails, setExpandedDetails] = useState({});
   const [detailsLoading, setDetailsLoading] = useState({});
 
-  // Загрузка списка компаний
-  const fetchCompanies = async () => {
+  // ===== Загрузка списка компаний =====
+  const fetchCompanies = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiServices.companies.getMyCompanies(); // ✅ правильно: companies
+      const data = await getMyCompanies();
       setCompanies(data.results || data);
     } catch (err) {
       console.error('Ошибка загрузки компаний:', err);
@@ -27,41 +30,45 @@ export default function ProfileCompanies() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCompanies();
-  }, []);
+  }, [fetchCompanies]);
 
-  // Загрузка деталей компании
-  const fetchCompanyDetails = async (companyId) => {
-    if (expandedDetails[companyId]) return;
-    setDetailsLoading((prev) => ({ ...prev, [companyId]: true }));
+  // ===== Загрузка деталей компании =====
+  const fetchCompanyDetails = async (slug) => {
+    if (expandedDetails[slug]) return;
+
+    setDetailsLoading((prev) => ({ ...prev, [slug]: true }));
     try {
-      const data = await apiServices.companies.getCompanyBySlug(companyId); // ✅ правильно: companies
-      setExpandedDetails((prev) => ({ ...prev, [companyId]: data }));
+      const data = await getCompanyBySlug(slug);
+      setExpandedDetails((prev) => ({ ...prev, [slug]: data }));
     } catch (err) {
       console.error('Ошибка загрузки деталей:', err);
       toast.error('Не удалось загрузить информацию о компании');
     } finally {
-      setDetailsLoading((prev) => ({ ...prev, [companyId]: false }));
+      setDetailsLoading((prev) => ({ ...prev, [slug]: false }));
     }
   };
 
-  const toggleExpand = (companyId) => {
-    if (expandedCompanyId === companyId) {
-      setExpandedCompanyId(null);
+  // ===== Переключение раскрытия компании =====
+  const toggleExpand = (slug) => {
+    if (expandedCompanySlug === slug) {
+      setExpandedCompanySlug(null);
     } else {
-      setExpandedCompanyId(companyId);
-      fetchCompanyDetails(companyId);
+      setExpandedCompanySlug(slug);
+      fetchCompanyDetails(slug);
     }
   };
 
+  // ===== Обработчик создания компании =====
   const handleCompanyCreated = () => {
     setIsModalOpen(false);
     fetchCompanies();
   };
 
+  // ===== Skeleton / Error =====
   if (loading) {
     return (
       <div className="flex flex-col justify-start items-center w-[1200px] h-[1000px] gap-6 px-[150px] pt-10 pb-[60px] rounded-[30px] bg-[#ebebeb] animate-pulse"
@@ -89,6 +96,7 @@ export default function ProfileCompanies() {
     );
   }
 
+  // ===== Основной UI =====
   return (
     <div
       className={`flex flex-col w-[1200px] h-[1000px] overflow-y-auto gap-[60px] px-40 py-10 rounded-[30px] bg-[#ebebeb] ${
@@ -96,7 +104,6 @@ export default function ProfileCompanies() {
       }`}
       style={{ boxShadow: "0px 5px 14px rgba(0,0,0,0.25)" }}
     >
-      {/* Заголовок и кнопка */}
       {companies.length > 0 && (
         <div className="flex justify-between items-center w-full">
           <p className="text-[32px] font-bold text-black">Мои компании</p>
@@ -133,13 +140,13 @@ export default function ProfileCompanies() {
       ) : (
         <div className="flex flex-col gap-[30px]">
           {companies.map((company) => {
-            const companyId = company.slug || company.id;
-            const isExpanded = expandedCompanyId === companyId;
-            const details = expandedDetails[companyId];
-            const isDetailsLoading = detailsLoading[companyId];
+            const slug = company.slug;
+            const isExpanded = expandedCompanySlug === slug;
+            const details = expandedDetails[slug];
+            const isDetailsLoading = detailsLoading[slug];
 
             return (
-              <div key={companyId}>
+              <div key={slug}>
                 {isExpanded ? (
                   <div className="relative w-[880px] h-[541px] rounded-[30px] overflow-hidden shadow-xl"
                        style={{ background: 'linear-gradient(226.41deg, #fff4e5 10.44%, #fff 98.97%)' }}>
@@ -165,7 +172,7 @@ export default function ProfileCompanies() {
                         </div>
 
                         <svg
-                          onClick={() => toggleExpand(companyId)}
+                          onClick={() => toggleExpand(slug)}
                           className="absolute right-6 top-6 w-6 h-6 cursor-pointer"
                           viewBox="0 0 24 24"
                           stroke="#FCA311"
@@ -183,7 +190,7 @@ export default function ProfileCompanies() {
                 ) : (
                   <div
                     className="flex justify-between items-center w-[880px] h-[90px] px-5 rounded-[20px] bg-white shadow hover:shadow-md cursor-pointer"
-                    onClick={() => toggleExpand(companyId)}
+                    onClick={() => toggleExpand(slug)}
                   >
                     <p className="text-xl font-semibold">{company.name || 'Без названия'}</p>
                     <svg width={21} height={11} viewBox="0 0 21 11" fill="none">

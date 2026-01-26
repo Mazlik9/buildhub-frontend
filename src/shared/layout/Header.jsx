@@ -1,169 +1,139 @@
 // src/shared/layout/Header.jsx
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/features/auth/AuthProvider';
-import { AuthModal } from '@/features/auth/components/AuthModal';
-import { RegisterModal } from '@/features/auth/components/RegisterModal';
+import { AuthFormModal } from '@/features/auth/components/AuthFormModal';
 
 export default function Header() {
-  const { user, logout } = useAuthContext();
-  const isLoggedIn = !!user;
-
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const {
+    user,
+    isLoggedIn,
+    isInitialized,
+    logout,
+    getInitials,
+  } = useAuthContext();
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log('Header видит auth-state:', { isLoggedIn, user });
-  }, [isLoggedIn, user]);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // login | register
+  const [profileOpen, setProfileOpen] = useState(false);
 
-  const openLogin = () => setIsAuthModalOpen(true);
+  /* ================= Handlers ================= */
 
-  const toggleProfile = () =>
-    setIsProfileDropdownOpen((prev) => !prev);
+  const openLogin = () => {
+    setAuthMode('login');
+    setAuthModalOpen(true);
+  };
 
-  const goToProfile = () => {
+  const openRegister = () => {
+    setAuthMode('register');
+    setAuthModalOpen(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setProfileOpen(false);
+    navigate('/');
+  };
+
+  const goProfile = () => {
     navigate('/profile');
-    setIsProfileDropdownOpen(false);
+    setProfileOpen(false);
   };
 
-  const handleSuccessfulAuth = () => {
-    setIsAuthModalOpen(false);
-    setIsRegisterModalOpen(false);
-  };
+  /* ================= UI ================= */
 
-  // ===== utils (позже можно вынести в shared/utils)
-  const getInitials = (fullName = '') => {
-    return fullName
-      .split(' ')
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  };
-
-  // ===== Avatar
-  const ProfileAvatar = () => {
+  const Avatar = () => {
     if (user?.avatar) {
       return (
         <img
           src={user.avatar}
-          alt="Аватар"
-          className="w-12 h-12 rounded-full object-cover"
+          alt="avatar"
+          className="w-10 h-10 rounded-full object-cover"
         />
       );
     }
 
-    const initials = user?.full_name
-      ? getInitials(user.full_name)
-      : 'U';
-
     return (
-      <div className="w-12 h-12 rounded-full bg-[#C9C8C8] flex items-center justify-center text-white font-bold text-xl">
-        {initials}
+      <div className="w-10 h-10 rounded-full bg-[#c9c8c8] flex items-center justify-center text-white font-bold">
+        {getInitials(user?.full_name || 'U')}
       </div>
     );
   };
 
   return (
     <>
-      <header className="flex justify-center items-center w-full h-[75px] gap-[120px] bg-[#ef6c1a]">
-        {/* LEFT */}
-        <div className="flex justify-start items-center gap-10">
-          <Link to="/" className="flex justify-center items-center gap-2.5">
-            <div className="w-[52px] h-[50px] rounded-[9px] bg-[#d9d9d9]" />
-            <p className="text-xl font-bold text-white">BUILDHUB</p>
-          </Link>
+      <header className="w-full h-[75px] bg-[#ef6c1a] flex items-center justify-between px-8">
+        {/* ===== LOGO ===== */}
+        <Link to="/" className="flex items-center gap-3">
+          <div className="w-[50px] h-[50px] rounded-lg bg-white/80" />
+          <span className="text-white text-xl font-black">BUILDHUB</span>
+        </Link>
 
-          <button className="flex justify-center items-center overflow-hidden gap-2.5 px-[18px] py-[15px] rounded-[20px] bg-[#2c3f4d]">
-            <p className="text-xl font-bold text-white">Каталог</p>
-          </button>
-        </div>
-
-        {/* SEARCH */}
-        <div className="flex justify-between items-center w-[700px] px-5 py-3.5 rounded-[20px] bg-white">
+        {/* ===== SEARCH ===== */}
+        <div className="flex-1 mx-10 max-w-[700px] bg-white rounded-2xl px-5 py-3">
           <input
-            type="text"
             placeholder="Поиск по сайту"
-            className="flex-1 bg-transparent outline-none text-xl font-light text-[#878787]"
+            className="w-full outline-none text-gray-700"
           />
         </div>
 
-        {/* RIGHT */}
-        {isLoggedIn ? (
-          <div className="flex items-center relative gap-[23px]">
-            {/* PROFILE */}
-            <div className="relative">
-              <button
-                onClick={toggleProfile}
-                className="flex items-center w-[97px] h-[52px] gap-[13px] pl-0.5 pr-3 rounded-[30px] bg-[#2c3f4d]"
-              >
-                <ProfileAvatar />
-                <span className="text-white">⌄</span>
-              </button>
+        {/* ===== RIGHT ===== */}
+        {!isInitialized ? null : isLoggedIn ? (
+          <div className="relative">
+            <button
+              onClick={() => setProfileOpen(prev => !prev)}
+              className="flex items-center gap-3 bg-[#2c3f4d] px-3 py-2 rounded-full"
+            >
+              <Avatar />
+              <span className="text-white">⌄</span>
+            </button>
 
-              {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-2xl z-50 overflow-hidden">
-                  <div className="px-5 py-4 border-b">
-                    <p className="font-semibold">
-                      {user?.full_name || 'Пользователь'}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {user?.email}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={goToProfile}
-                    className="w-full px-5 py-3 text-left hover:bg-gray-50"
-                  >
-                    Мой профиль
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      logout();
-                      setIsProfileDropdownOpen(false);
-                    }}
-                    className="w-full px-5 py-3 text-left text-red-600 hover:bg-gray-50 border-t"
-                  >
-                    Выйти
-                  </button>
+            {profileOpen && (
+              <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl overflow-hidden z-50">
+                <div className="px-4 py-3 border-b">
+                  <p className="font-semibold">
+                    {user?.full_name || 'Пользователь'}
+                  </p>
+                  <p className="text-sm text-gray-500">{user?.email}</p>
                 </div>
-              )}
-            </div>
+
+                <button
+                  onClick={goProfile}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-100"
+                >
+                  Мой профиль
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-3 text-red-600 hover:bg-gray-100 border-t"
+                >
+                  Выйти
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <button
             onClick={openLogin}
-            className="w-[244px] h-[52px] rounded-[20px] bg-[#2c3f4d] text-white font-bold"
+            className="bg-[#2c3f4d] text-white px-8 py-3 rounded-2xl font-bold"
           >
             Войти
           </button>
         )}
       </header>
 
-      {/* MODALS */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSwitchToRegister={() => {
-          setIsAuthModalOpen(false);
-          setIsRegisterModalOpen(true);
-        }}
-        onSuccessfulLogin={handleSuccessfulAuth}
-      />
-
-      <RegisterModal
-        isOpen={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
-        onSwitchToLogin={() => {
-          setIsRegisterModalOpen(false);
-          setIsAuthModalOpen(true);
-        }}
-        onSuccessfulRegistration={handleSuccessfulAuth}
+      {/* ===== AUTH MODAL ===== */}
+      <AuthFormModal
+        isOpen={authModalOpen}
+        mode={authMode}
+        onClose={() => setAuthModalOpen(false)}
+        onSwitchMode={() =>
+          setAuthMode(prev => (prev === 'login' ? 'register' : 'login'))
+        }
+        onSuccess={() => setAuthModalOpen(false)}
       />
     </>
   );
