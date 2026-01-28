@@ -42,27 +42,31 @@ export default function Header() {
     setProfileOpen(false);
   };
 
-  /* ================= UI ================= */
+  /* ================= Avatar ================= */
 
   const Avatar = () => {
-    if (user?.avatar) {
-      // Фикс для аватара: нормализуем путь и добавляем полный URL к media-серверу
-      const normalizedAvatar = user.avatar.replace(/^\/+/, '/'); // Убирает лишние слеши, фиксит "//buildhub-local-media"
-      const mediaBaseUrl = import.meta.env.VITE_MEDIA_URL; // Бери из .env или fallback на dev
+    const mediaBaseUrl =
+      import.meta.env.VITE_MEDIA_URL || '';
+
+    if (user?.avatar && mediaBaseUrl) {
+      // нормализуем путь: всегда один /
+      const normalizedAvatar =
+        '/' + user.avatar.replace(/^\/+/, '');
+
       return (
         <img
           src={`${mediaBaseUrl}${normalizedAvatar}`}
           alt="avatar"
-          className="w-10 h-10 rounded-full object-cover"
+          className="w-10 h-10 rounded-full object-cover bg-gray-200"
           onError={(e) => {
-            // Fallback на initials при ошибке загрузки (например, если media недоступен)
-            e.target.onerror = null;
-            e.target.style.display = 'none'; // Скрываем img, чтобы initials отобразились
+            // если картинка не загрузилась — скрываем img
+            e.currentTarget.style.display = 'none';
           }}
         />
       );
     }
 
+    // fallback на инициалы
     return (
       <div className="w-10 h-10 rounded-full bg-[#c9c8c8] flex items-center justify-center text-white font-bold">
         {getInitials(user?.full_name || 'U')}
@@ -70,13 +74,17 @@ export default function Header() {
     );
   };
 
+  /* ================= UI ================= */
+
   return (
     <>
       <header className="w-full h-[75px] bg-[#ef6c1a] flex items-center justify-between px-8">
         {/* ===== LOGO ===== */}
         <Link to="/" className="flex items-center gap-3">
           <div className="w-[50px] h-[50px] rounded-lg bg-white/80" />
-          <span className="text-white text-xl font-black">BUILDHUB</span>
+          <span className="text-white text-xl font-black">
+            BUILDHUB
+          </span>
         </Link>
 
         {/* ===== SEARCH ===== */}
@@ -104,7 +112,9 @@ export default function Header() {
                   <p className="font-semibold">
                     {user?.full_name || 'Пользователь'}
                   </p>
-                  <p className="text-sm text-gray-500">{user?.email}</p>
+                  <p className="text-sm text-gray-500">
+                    {user?.email}
+                  </p>
                 </div>
 
                 <button
@@ -139,7 +149,9 @@ export default function Header() {
         mode={authMode}
         onClose={() => setAuthModalOpen(false)}
         onSwitchMode={() =>
-          setAuthMode(prev => (prev === 'login' ? 'register' : 'login'))
+          setAuthMode(prev =>
+            prev === 'login' ? 'register' : 'login'
+          )
         }
         onSuccess={() => setAuthModalOpen(false)}
       />

@@ -7,8 +7,11 @@ import {
   clearAuthTokens,
 } from '@/shared/lib/authTokens';
 
+const API_BASE =
+  `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_API_VERSION}`;
+
 const refreshClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: API_BASE,
   timeout: 10000,
 });
 
@@ -25,10 +28,17 @@ export const refreshAccessToken = async () => {
       { refresh }
     );
 
-    setAuthTokens(res.data.access, refresh);
-    return res.data.access;
+    const newAccess = res?.data?.access;
+    if (!newAccess) {
+      clearAuthTokens();
+      throw new Error('Refresh response has no access token');
+    }
+
+    // refresh-токен обычно тот же, но если бэк начнёт ротировать — можно расширить
+    setAuthTokens(newAccess, refresh);
+    return newAccess;
   } catch (err) {
-    clearAuthTokens(); // 🔥 ЕДИНСТВЕННОЕ место logout
+    clearAuthTokens(); // единственная точка "жёсткого" logout по refresh-fail
     throw err;
   }
 };

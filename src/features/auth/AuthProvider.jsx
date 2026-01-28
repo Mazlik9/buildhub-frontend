@@ -16,8 +16,6 @@ import {
 
 import { toast } from 'sonner';
 
-import { setAuthTokens } from '@/shared/lib/authTokens';
-
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -29,9 +27,11 @@ export const AuthProvider = ({ children }) => {
 
   const restoreSession = useCallback(async () => {
     try {
+      // Если refresh/access валидны — axiosInstance сам подхватит и/или обновит
       const profile = await getProfile();
       setUser(profile);
     } catch {
+      // Если профиль не получили — считаем, что сессии нет
       setUser(null);
     } finally {
       setIsInitialized(true);
@@ -48,13 +48,16 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       const data = await loginRequest(credentials);
-      console.log('Backend response from login:', data);  // 🔥 Добавь это для дебага
-      setAuthTokens(data.access, data.refresh);  // Если ключей нет, здесь ошибка
+      // ✅ Токены сохраняются внутри services.login()
 
       const profile = await getProfile();
-      // ...
+      setUser(profile);
+
+      toast.success(
+        `Добро пожаловать, ${profile?.full_name || 'пользователь'}!`
+      );
+      return data;
     } catch (err) {
-      console.error('Login error:', err);  // Добавь для детальной ошибки
       toast.error('Ошибка входа. Проверьте данные.');
       throw err;
     } finally {
@@ -68,9 +71,9 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       const data = await registerRequest(payload);
-      // 🔥 Добавьте это: сохраняем токены вручную (предполагая, что register тоже возвращает токены)
-      setAuthTokens(data.access, data.refresh);  // Из authTokens.js
+      // ✅ Если бэк отдаёт токены на регистрации — services.register сохранит их
 
+      // Если токенов нет — getProfile может упасть, это ок (покажет ошибку)
       const profile = await getProfile();
       setUser(profile);
 
@@ -89,6 +92,7 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(async () => {
     try {
       await logoutRequest();
+      // ✅ services.logout() сам чистит токены локально
     } catch {
       // backend может упасть — нам всё равно
     } finally {
@@ -104,7 +108,7 @@ export const AuthProvider = ({ children }) => {
       if (typeof updatedDataOrFn === 'function') {
         return updatedDataOrFn(prev);
       }
-      return { ...prev, ...updatedDataOrFn };
+      return { ...(prev || {}), ...updatedDataOrFn };
     });
   }, []);
 
@@ -112,8 +116,10 @@ export const AuthProvider = ({ children }) => {
 
   const getInitials = useCallback((fullName = '') => {
     return fullName
-      .split(' ')
-      .map(n => n[0])
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((n) => n[0])
       .join('')
       .toUpperCase();
   }, []);
@@ -136,7 +142,7 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-    
+
 /* ================= Hook ================= */
 
 export const useAuthContext = () => {

@@ -8,10 +8,29 @@ import {
   CATEGORY_ENDPOINTS,
   ACTOR_ENDPOINTS,
 } from './endpoints';
+import { setAuthTokens, clearAuthTokens } from '@/shared/lib/authTokens';
 
 /* =====================================================
-   AUTH (ТОЛЬКО HTTP, без токенов)
+   AUTH (HTTP + сохранение токенов, если они есть в ответе)
 ===================================================== */
+
+const saveTokensIfPresent = (data) => {
+  // поддержка самых частых форматов
+  const access =
+    data?.access ||
+    data?.accessToken ||
+    data?.token ||
+    data?.jwt?.access;
+
+  const refresh =
+    data?.refresh ||
+    data?.refreshToken ||
+    data?.jwt?.refresh;
+
+  if (access || refresh) {
+    setAuthTokens(access, refresh);
+  }
+};
 
 export const login = async (credentials) => {
   const { data } = await api.post(
@@ -19,6 +38,8 @@ export const login = async (credentials) => {
     credentials,
     { skipAuth: true }
   );
+
+  saveTokensIfPresent(data);
   return data;
 };
 
@@ -28,16 +49,23 @@ export const register = async (payload) => {
     payload,
     { skipAuth: true }
   );
+
+  // если регистрация сразу возвращает токены — сохраним
+  saveTokensIfPresent(data);
   return data;
 };
 
 export const logout = async () => {
-  // backend может игнорировать, но интерфейс чистый
-  await api.post(
-    USER_ENDPOINTS.LOGOUT,
-    {},
-    { skipAuth: true }
-  );
+  try {
+    await api.post(
+      USER_ENDPOINTS.LOGOUT,
+      {},
+      { skipAuth: true }
+    );
+  } finally {
+    // ✅ всегда чистим токены локально
+    clearAuthTokens();
+  }
 };
 
 /* =====================================================
