@@ -16,6 +16,8 @@ import {
 
 import { toast } from 'sonner';
 
+import { setAuthTokens } from '@/shared/lib/authTokens';
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -46,14 +48,13 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       const data = await loginRequest(credentials);
-      // Токены уже сохраняются внутри API
+      console.log('Backend response from login:', data);  // 🔥 Добавь это для дебага
+      setAuthTokens(data.access, data.refresh);  // Если ключей нет, здесь ошибка
 
       const profile = await getProfile();
-      setUser(profile);
-
-      toast.success(`Добро пожаловать, ${profile.full_name || 'пользователь'}!`);
-      return data;
+      // ...
     } catch (err) {
+      console.error('Login error:', err);  // Добавь для детальной ошибки
       toast.error('Ошибка входа. Проверьте данные.');
       throw err;
     } finally {
@@ -67,6 +68,8 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       const data = await registerRequest(payload);
+      // 🔥 Добавьте это: сохраняем токены вручную (предполагая, что register тоже возвращает токены)
+      setAuthTokens(data.access, data.refresh);  // Из authTokens.js
 
       const profile = await getProfile();
       setUser(profile);

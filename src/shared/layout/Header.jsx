@@ -46,11 +46,19 @@ export default function Header() {
 
   const Avatar = () => {
     if (user?.avatar) {
+      // Фикс для аватара: нормализуем путь и добавляем полный URL к media-серверу
+      const normalizedAvatar = user.avatar.replace(/^\/+/, '/'); // Убирает лишние слеши, фиксит "//buildhub-local-media"
+      const mediaBaseUrl = import.meta.env.VITE_MEDIA_URL; // Бери из .env или fallback на dev
       return (
         <img
-          src={user.avatar}
+          src={`${mediaBaseUrl}${normalizedAvatar}`}
           alt="avatar"
           className="w-10 h-10 rounded-full object-cover"
+          onError={(e) => {
+            // Fallback на initials при ошибке загрузки (например, если media недоступен)
+            e.target.onerror = null;
+            e.target.style.display = 'none'; // Скрываем img, чтобы initials отобразились
+          }}
         />
       );
     }
