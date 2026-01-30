@@ -7,11 +7,9 @@ import {
   clearAuthTokens,
 } from '@/shared/lib/authTokens';
 
-const API_BASE =
-  `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_API_VERSION}`;
-
+// ✅ ВАЖНО: refresh endpoint у тебя в корне, БЕЗ /api/v1
 const refreshClient = axios.create({
-  baseURL: API_BASE,
+  baseURL: import.meta.env.VITE_API_BASE_URL, // http://localhost:8000
   timeout: 10000,
 });
 
@@ -24,7 +22,7 @@ export const refreshAccessToken = async () => {
 
   try {
     const res = await refreshClient.post(
-      AUTH_ENDPOINTS.REFRESH_TOKEN,
+      AUTH_ENDPOINTS.REFRESH_TOKEN, // должно быть "/token/jwt/refresh/"
       { refresh }
     );
 
@@ -34,11 +32,10 @@ export const refreshAccessToken = async () => {
       throw new Error('Refresh response has no access token');
     }
 
-    // refresh-токен обычно тот же, но если бэк начнёт ротировать — можно расширить
     setAuthTokens(newAccess, refresh);
     return newAccess;
   } catch (err) {
-    clearAuthTokens(); // единственная точка "жёсткого" logout по refresh-fail
+    clearAuthTokens();
     throw err;
   }
 };

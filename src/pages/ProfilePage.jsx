@@ -1,86 +1,108 @@
 // src/pages/ProfilePage.jsx
-import { useState } from 'react';
-import { useAuthContext } from '@/features/auth/AuthProvider';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useProfile } from '@/features/profile/hooks/useProfile';
+
 import ProfileSideBar from '@/features/profile/components/ProfileSideBar';
-import ProfileEditForm from '@/features/profile/components/ProfileEditForm/ProfileEditForm';
+import ProfileInfoForm from '@/features/profile/components/ProfileInfoForm/ProfileInfoForm';
 import ProfileAds from '@/features/profile/components/ProfileAds/ProfileAds';
 import ProfileCompanies from '@/features/profile/components/ProfileCompanies/ProfileCompanies';
-import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const { isLoggedIn, openLoginModal } = useAuthContext();
-  const { profile, loading, error } = useProfile();
+  const navigate = useNavigate();
+  const { isLoggedIn, isInitialized, logout } = useAuth();
+
+  const { profile, loading, error, fetchProfile, updateProfile } = useProfile();
+
+  const tabs = useMemo(
+    () => [
+      { id: 'edit', label: 'Мой профиль' },
+      { id: 'ads', label: 'Мои объявления' },
+      { id: 'companies', label: 'Мои компании' },
+      { id: 'reviews', label: 'Мои отзывы' }, // пока заглушка
+    ],
+    []
+  );
+
   const [activeTab, setActiveTab] = useState('edit');
 
-  // Пользователь не залогинен
+  /* ================= Access control ================= */
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (!isLoggedIn) navigate('/');
+  }, [isInitialized, isLoggedIn, navigate]);
+
+  /* ================= Load profile ================= */
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (isLoggedIn && !profile && !loading) fetchProfile();
+  }, [isInitialized, isLoggedIn, profile, loading, fetchProfile]);
+
+  if (!isInitialized) {
+    return <div className="py-10 text-center text-gray-600">Загрузка...</div>;
+  }
+
   if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center p-10 bg-white rounded-2xl shadow-xl max-w-md">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Доступ ограничен</h2>
-          <p className="text-gray-600 mb-6">
-            Пожалуйста, войдите в аккаунт, чтобы посмотреть профиль
-          </p>
-          <button
-            onClick={() => {
-              if (typeof openLoginModal === 'function') {
-                openLoginModal();
-              } else {
-                toast('Функция логина временно недоступна');
-              }
-            }}
-            className="px-8 py-4 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition"
-          >
-            Войти
-          </button>
-        </div>
-      </div>
-    );
+    return <div className="py-10 text-center text-gray-600">Нужно войти в аккаунт</div>;
   }
 
-  // Загрузка профиля
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-orange-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-gray-700">Загрузка профиля...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Ошибка загрузки
-  if (error || !profile) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center p-10 bg-white rounded-2xl shadow-xl max-w-md">
-          <h2 className="text-3xl font-bold text-red-600 mb-4">Что-то пошло не так</h2>
-          <p className="text-gray-600 mb-6">{error?.message || 'Профиль не удалось загрузить'}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-8 py-4 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition"
-          >
-            Попробовать снова
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Основной контент профиля
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-8 lg:px-16">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-        {/* Боковая панель */}
-        <ProfileSideBar activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {/* Контент вкладок */}
-        <div className="flex-1" key={activeTab}>
-          {activeTab === 'edit' && <ProfileEditForm profile={profile} />}
-          {activeTab === 'ads' && <ProfileAds />}
-          {activeTab === 'companies' && <ProfileCompanies />}
+    <div className="w-full min-h-[calc(100vh-75px)] bg-[#fff4e5] flex justify-center">
+      {/* 1920 как в фигме */}
+      <div className="w-full max-w-[1920px] px-[149px] py-[40px]">
+        {/* Ряд: sidebar + content */}
+        <div className="flex gap-[26px]">
+          {/* SIDEBAR */}
+          <div className="w-[383px] h-[1000px] flex-shrink-0">
+            <ProfileSideBar
+              profile={profile}
+              tabs={tabs}
+              activeTab={activeTab}
+              onChangeTab={setActiveTab}
+              onLogout={logout}
+            />
+          </div>
+    
+          {/* CONTENT */}
+          <div className="w-[1200px] h-[1000px] min-w-0">
+            {loading && !profile ? (
+              <div className="h-full flex items-center justify-center text-gray-600">
+                Загружаем профиль...
+              </div>
+            ) : error ? (
+              <div className="h-full p-6">
+                <div className="p-4 rounded-xl bg-red-50 text-red-700">{error}</div>
+                <button
+                  onClick={fetchProfile}
+                  className="mt-4 px-6 py-3 rounded-xl bg-[#2c3f4d] text-white font-bold"
+                >
+                  Повторить
+                </button>
+              </div>
+            ) : (
+              <>
+                {activeTab === 'edit' && (
+                  <ProfileInfoForm
+                    profile={profile}
+                    onSave={updateProfile}
+                    isSaving={loading}
+                  />
+                )}
+  
+                {activeTab === 'ads' && <ProfileAds profile={profile} />}
+              
+                {activeTab === 'companies' && <ProfileCompanies profile={profile} />}
+              
+                {activeTab === 'reviews' && (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                    Раздел “Мои отзывы” сделаем позже
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
