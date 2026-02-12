@@ -6,7 +6,7 @@ export default function ProfileSideBar({
   tabs = [],
   activeTab,
   onChangeTab,
-  onLogout, // опционально: если захочешь вывести кнопку "Выйти" через контекст/страницу
+  onLogout,
 }) {
   const fullName = useMemo(() => {
     const name = profile?.full_name?.trim();
@@ -17,7 +17,7 @@ export default function ProfileSideBar({
     return [last, first, middle].filter(Boolean).join(' ') || 'Пользователь';
   }, [profile]);
 
-  // Разбиваем имя на 2 строки как в макете (если 3+ слов — 1 строка: "Фамилия Имя", 2 строка: "Отчество")
+  // Разбиваем имя на 2 строки как в макете
   const nameLines = useMemo(() => {
     const parts = fullName.split(/\s+/).filter(Boolean);
     if (parts.length <= 2) return [parts.join(' '), ''];
@@ -28,12 +28,11 @@ export default function ProfileSideBar({
 
   return (
     <div
-      className="flex flex-col justify-start items-center w-[383px] h-[1000px] gap-[100px] px-[72px] pt-10 pb-2.5 rounded-[30px] bg-[#ebebeb]"
-      style={{ boxShadow: '0px 5px 14px 0 rgba(0,0,0,0.25)' }}
+      className="flex flex-col justify-start items-center w-[383px] h-[900px] gap-[60px] px-[72px] pt-10 pb-2.5 rounded-[30px] bg-[#ebebeb]"
+      style={{ boxShadow: "0px 5px 14px 0 rgba(0,0,0,0.25)" }}
     >
-      {/* ===== TOP (avatar + name) ===== */}
       <div className="flex flex-col justify-start items-center self-stretch flex-grow-0 flex-shrink-0 gap-[25px]">
-        {/* Avatar (пока по дизайну-заглушке) */}
+        {/* Аватар */}
         <div className="flex flex-col justify-center items-center self-stretch flex-grow-0 flex-shrink-0 h-[230px] relative gap-10 pl-[169px] pr-3 pt-[174px] pb-[5px]">
           <div className="flex justify-center items-center flex-grow-0 flex-shrink-0 absolute left-[5px] top-0 overflow-hidden gap-2.5">
             <svg
@@ -52,18 +51,18 @@ export default function ProfileSideBar({
                 fill="#C9C8C8"
               />
               <path
-                d="M115 221.632C173.891 221.632 221.632 173.891 221.632 115C221.632 56.1086 173.891 8.36771 115 8.36771C56.1086 8.36771 8.36768 56.1086 8.36768 115C8.36768 173.891 56.1086 221.632 115 221.632Z"
+                d="M115 221.632C173.891 221.632 221.632 173.891 221.632 115C221.632 56.1086 173.891 8.36768 115 8.36768C56.1086 8.36768 8.36768 56.1086 8.36768 115C8.36768 173.891 56.1086 221.632 115 221.632Z"
                 fill="#FEFEFE"
               />
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
-                d="M115 14.8293C170.323 14.8293 215.171 59.6772 215.171 115C215.171 170.323 170.323 215.171 115 215.171C59.677 215.171 14.8291 170.323 14.8291 115C14.8291 59.6772 59.677 14.8293 115 14.8293Z"
+                d="M115 14.8292C170.323 14.8292 215.171 59.6772 215.171 115C215.171 170.323 170.323 215.171 115 215.171C59.6773 215.171 14.8293 170.323 14.8293 115C14.8293 59.6772 59.6773 14.8292 115 14.8292Z"
                 fill="#C9C8C8"
               />
               <mask
-                id="mask0_2902_536"
-                style={{ maskType: 'luminance' }}
+                id="mask0_2487_332"
+                style={{ maskType: "luminance" }}
                 maskUnits="userSpaceOnUse"
                 x={14}
                 y={14}
@@ -71,75 +70,73 @@ export default function ProfileSideBar({
                 height={202}
               >
                 <path
-                  d="M115 14.8293C170.323 14.8293 215.171 59.6772 215.171 115C215.171 170.323 170.323 215.171 115 215.171C59.677 215.171 14.8291 170.323 14.8291 115C14.8291 59.6772 59.677 14.8293 115 14.8293Z"
+                  d="M115 14.8292C170.323 14.8292 215.171 59.6772 215.171 115C215.171 170.323 170.323 215.171 115 215.171C59.6773 215.171 14.8293 170.323 14.8293 115C14.8293 59.6772 59.6773 14.8292 115 14.8292Z"
                   fill="white"
                 />
               </mask>
-              <g mask="url(#mask0_2902_536)">
+              <g mask="url(#mask0_2487_332)">
                 <path
-                  d="M115 321.065C161.234 321.065 198.714 283.585 198.714 237.351C198.714 191.117 161.234 153.637 115 153.637C68.7657 153.637 31.2856 191.117 31.2856 237.351C31.2856 283.585 68.7657 321.065 115 321.065Z"
+                  d="M115 321.065C161.234 321.065 198.714 283.585 198.714 237.351C198.714 191.117 161.234 153.637 115 153.637C68.7662 153.637 31.2861 191.117 31.2861 237.351C31.2861 283.585 68.7662 321.065 115 321.065Z"
                   fill="#FEFEFE"
                 />
                 <path
-                  d="M115 139.327C137.524 139.327 155.784 121.068 155.784 98.5432C155.784 76.0189 137.524 57.7594 115 57.7594C92.4754 57.7594 74.2158 76.0189 74.2158 98.5432C74.2158 121.068 92.4754 139.327 115 139.327Z"
+                  d="M115 139.327C137.524 139.327 155.784 121.068 155.784 98.5432C155.784 76.0189 137.524 57.7594 115 57.7594C92.4759 57.7594 74.2163 76.0189 74.2163 98.5432C74.2163 121.068 92.4759 139.327 115 139.327Z"
                   fill="#FEFEFE"
                 />
               </g>
             </svg>
           </div>
         </div>
-
-        {/* Name */}
+        
+        {/* Имя пользователя */}
         <div className="flex flex-col justify-center items-center flex-grow-0 flex-shrink-0 relative gap-2.5 p-2.5">
-          <p className="flex-grow-0 flex-shrink-0 text-[32px] font-bold text-center text-black leading-[1.05]">
-            <span className="text-[32px] font-bold text-center text-black">
+          <p className="flex-grow-0 flex-shrink-0 text-[32px] font-bold text-center text-black">
+            <span className="flex-grow-0 flex-shrink-0 text-[32px] font-bold text-center text-black">
               {nameLines[0]}
             </span>
-            {nameLines[1] ? (
+            {nameLines[1] && (
               <>
                 <br />
-                <span className="text-[32px] font-bold text-center text-black">
+                <span className="flex-grow-0 flex-shrink-0 text-[32px] font-bold text-center text-black">
                   {nameLines[1]}
                 </span>
               </>
-            ) : null}
+            )}
           </p>
         </div>
       </div>
 
-      {/* ===== MENU ===== */}
+      {/* Меню */}
       <div className="flex flex-col justify-start items-start flex-grow-0 flex-shrink-0 gap-5">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => onChangeTab?.(t.id)}
-            className="flex justify-center items-center flex-grow-0 flex-shrink-0 relative gap-4 px-6 py-4 rounded-2xl w-full text-left"
+            className="flex justify-center items-center flex-grow-0 flex-shrink-0 relative gap-4 px-6 py-4 rounded-2xl cursor-pointer hover:opacity-90 transition"
             style={
               isActive(t.id)
-                ? { background: 'linear-gradient(to right, #fca311 -2.31%, #ef6c1a 102.31%)' }
+                ? { background: "linear-gradient(to right, #fca311 -2.31%, #ef6c1a 102.31%)" }
                 : undefined
             }
           >
-            <p
-              className={
-                isActive(t.id)
-                  ? 'flex-grow-0 flex-shrink-0 text-base font-black text-left text-white'
-                  : 'flex-grow-0 flex-shrink-0 text-xl text-left text-[#484848]'
-              }
-            >
+            <p className={
+              isActive(t.id)
+                ? "flex-grow-0 flex-shrink-0 text-base font-black text-left text-white"
+                : "flex-grow-0 flex-shrink-0 text-xl text-left text-[#484848]"
+            }>
               {t.label}
             </p>
           </button>
         ))}
       </div>
 
-      {/* ===== LOGOUT ===== */}
-      <div className="flex justify-start items-start flex-grow-0 flex-shrink-0 gap-2.5">
+      {/* Кнопка выхода */}
+      <div className="flex flex-col justify-start items-start flex-grow-0 flex-shrink-0 gap-2.5">
         <button
           type="button"
           onClick={() => onLogout?.()}
-          className="flex justify-center items-center flex-grow-0 flex-shrink-0 relative gap-2 px-6 py-4 rounded-2xl"
+          className="flex justify-center items-center flex-grow-0 flex-shrink-0 relative gap-2 px-6 py-4 rounded-2xl cursor-pointer hover:opacity-90 transition"
         >
           <svg
             width={18}
@@ -157,7 +154,6 @@ export default function ProfileSideBar({
               fill="#FA1414"
             />
           </svg>
-
           <p className="flex-grow-0 flex-shrink-0 text-sm font-medium text-left text-[#fa1414]">
             Выйти
           </p>

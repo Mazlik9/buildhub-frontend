@@ -55,7 +55,7 @@ export default function ProfilePage() {
         {/* Ряд: sidebar + content */}
         <div className="flex gap-[26px]">
           {/* SIDEBAR */}
-          <div className="w-[383px] h-[1000px] flex-shrink-0">
+          <div className="flex-shrink-0">
             <ProfileSideBar
               profile={profile}
               tabs={tabs}
@@ -66,7 +66,7 @@ export default function ProfilePage() {
           </div>
     
           {/* CONTENT */}
-          <div className="w-[1200px] h-[1000px] min-w-0">
+          <div className="flex-1 min-w-0">
             {loading && !profile ? (
               <div className="h-full flex items-center justify-center text-gray-600">
                 Загружаем профиль...
@@ -97,7 +97,7 @@ export default function ProfilePage() {
               
                 {activeTab === 'reviews' && (
                   <div className="w-full h-full flex items-center justify-center text-gray-500">
-                    Раздел “Мои отзывы” сделаем позже
+                    Раздел "Мои отзывы" сделаем позже
                   </div>
                 )}
               </>
